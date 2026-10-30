@@ -1,0 +1,791 @@
+import html
+import json
+
+
+def escape(value):
+    if value is None:
+        return ""
+
+    return html.escape(
+        str(value)
+    )
+
+
+def generate_html(
+    business_name: str,
+    location: str,
+    page_content: dict,
+    schema_markup: dict
+):
+    seo = page_content.get(
+        "seo",
+        {}
+    )
+
+    sections = page_content.get(
+        "sections",
+        []
+    )
+
+    faqs = page_content.get(
+        "faqs",
+        []
+    )
+
+    title = seo.get(
+        "title",
+        f"{business_name} in {location.split(',')[0].strip()}"
+    )
+
+    meta_description = seo.get(
+        "meta_description",
+        ""
+    )
+
+    h1 = seo.get(
+        "h1",
+        f"{business_name} in {location.split(',')[0].strip()}"
+    )
+
+    location_short = location.split(
+        ","
+    )[0].strip()
+
+    # -------------------------------------------------
+    # HTML DOCUMENT
+    # -------------------------------------------------
+
+    html_parts = []
+
+    html_parts.append(
+        "<!DOCTYPE html>"
+    )
+
+    html_parts.append(
+        '<html lang="en">'
+    )
+
+    # -------------------------------------------------
+    # HEAD
+    # -------------------------------------------------
+
+    html_parts.append(
+        "<head>"
+    )
+
+    html_parts.append(
+        '<meta charset="UTF-8">'
+    )
+
+    html_parts.append(
+        '<meta name="viewport" '
+        'content="width=device-width, initial-scale=1.0">'
+    )
+
+    html_parts.append(
+        f"<title>{escape(title)}</title>"
+    )
+
+    html_parts.append(
+        f'<meta name="description" '
+        f'content="{escape(meta_description)}">'
+    )
+
+    html_parts.append(
+        '<meta name="robots" content="index, follow">'
+    )
+
+    # Canonical
+    canonical_url = (
+        f"/locations/"
+        f"{escape(location_short.lower().replace(' ', '-'))}/"
+    )
+
+    html_parts.append(
+        f'<link rel="canonical" href="{canonical_url}">'
+    )
+
+    # Open Graph
+    html_parts.append(
+        f'<meta property="og:title" '
+        f'content="{escape(title)}">'
+    )
+
+    html_parts.append(
+        f'<meta property="og:description" '
+        f'content="{escape(meta_description)}">'
+    )
+
+    html_parts.append(
+        '<meta property="og:type" content="website">'
+    )
+
+    # -------------------------------------------------
+    # LOCAL BUSINESS SCHEMA
+    # -------------------------------------------------
+
+    local_business_schema = schema_markup.get(
+        "local_business"
+    )
+
+    if local_business_schema:
+
+        html_parts.append(
+            '<script type="application/ld+json">'
+        )
+
+        html_parts.append(
+            json.dumps(
+                local_business_schema,
+                ensure_ascii=False
+            )
+        )
+
+        html_parts.append(
+            "</script>"
+        )
+
+    # -------------------------------------------------
+    # FAQ SCHEMA
+    # -------------------------------------------------
+
+    faq_schema = schema_markup.get(
+        "faq_page"
+    )
+
+    if faq_schema:
+
+        html_parts.append(
+            '<script type="application/ld+json">'
+        )
+
+        html_parts.append(
+            json.dumps(
+                faq_schema,
+                ensure_ascii=False
+            )
+        )
+
+        html_parts.append(
+            "</script>"
+        )
+
+    # -------------------------------------------------
+    # CSS
+    # -------------------------------------------------
+
+    html_parts.append(
+        """
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+    color: #222;
+    background: #ffffff;
+}
+
+a {
+    text-decoration: none;
+}
+
+.container {
+    width: 100%;
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Navigation */
+
+.site-header {
+    width: 100%;
+    border-bottom: 1px solid #e5e5e5;
+    background: #ffffff;
+}
+
+.navbar {
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.brand {
+    font-size: 21px;
+    font-weight: 700;
+    color: #222;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.nav-links a {
+    color: #444;
+    font-size: 15px;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* Hero */
+
+.hero {
+    padding: 90px 20px;
+    text-align: center;
+    background: #f5f7fa;
+}
+
+.hero h1 {
+    max-width: 850px;
+    margin: 0 auto 20px;
+    font-size: 46px;
+    line-height: 1.15;
+}
+
+.hero-location {
+    margin: 0 auto 28px;
+    font-size: 18px;
+    color: #555;
+}
+
+.hero-button {
+    display: inline-block;
+    padding: 13px 24px;
+    border-radius: 6px;
+    background: #222;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Main */
+
+main {
+    width: 100%;
+}
+
+/* Sections */
+
+.section {
+    padding: 70px 0;
+}
+
+.section:nth-child(even) {
+    background: #fafafa;
+}
+
+.section h2 {
+    margin: 0 0 20px;
+    font-size: 32px;
+    line-height: 1.25;
+}
+
+.section-content {
+    max-width: 900px;
+    font-size: 18px;
+    color: #444;
+}
+
+/* Services */
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(220px, 1fr)
+    );
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.service-card {
+    padding: 25px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.service-card h3 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+/* FAQ */
+
+.faq-section {
+    padding: 70px 0;
+    background: #ffffff;
+}
+
+.faq-item {
+    max-width: 900px;
+    padding: 22px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.faq-item h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+}
+
+.faq-item p {
+    margin: 0;
+    color: #555;
+}
+
+/* CTA */
+
+.cta {
+    padding: 80px 20px;
+    text-align: center;
+    background: #f5f7fa;
+}
+
+.cta h2 {
+    margin-bottom: 15px;
+    font-size: 34px;
+}
+
+.cta-content {
+    max-width: 750px;
+    margin: 0 auto 25px;
+    font-size: 18px;
+    color: #555;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 14px 28px;
+    border-radius: 6px;
+    background: #222;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Footer */
+
+.site-footer {
+    padding: 35px 0;
+    border-top: 1px solid #e5e5e5;
+    background: #ffffff;
+}
+
+.footer-content {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    .navbar {
+        padding: 15px 0;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .nav-links {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .hero {
+        padding: 65px 20px;
+    }
+
+    .hero h1 {
+        font-size: 34px;
+    }
+
+    .section {
+        padding: 50px 0;
+    }
+
+    .section h2 {
+        font-size: 28px;
+    }
+
+}
+
+</style>
+"""
+    )
+
+    html_parts.append(
+        "</head>"
+    )
+
+    # -------------------------------------------------
+    # BODY
+    # -------------------------------------------------
+
+    html_parts.append(
+        "<body>"
+    )
+
+    # -------------------------------------------------
+    # NAVIGATION
+    # -------------------------------------------------
+
+    html_parts.append(
+        """
+<header class="site-header">
+    <div class="container">
+        <nav class="navbar">
+"""
+    )
+
+    html_parts.append(
+        f'<a class="brand" href="/">'
+        f'{escape(business_name)}'
+        f'</a>'
+    )
+
+    html_parts.append(
+        """
+            <div class="nav-links">
+                <a href="#about">About</a>
+                <a href="#services">Services</a>
+                <a href="#location">Location</a>
+                <a href="#faq">FAQ</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </nav>
+    </div>
+</header>
+"""
+    )
+
+    # -------------------------------------------------
+    # MAIN
+    # -------------------------------------------------
+
+    html_parts.append(
+        "<main>"
+    )
+
+    # -------------------------------------------------
+    # HERO
+    # -------------------------------------------------
+
+    html_parts.append(
+        """
+<section class="hero" id="top">
+    <div class="container">
+"""
+    )
+
+    html_parts.append(
+        f"<h1>{escape(h1)}</h1>"
+    )
+
+    html_parts.append(
+        f'<p class="hero-location">'
+        f'{escape(location)}'
+        f'</p>'
+    )
+
+    html_parts.append(
+        '<a class="hero-button" href="#contact">'
+        'Get Started'
+        '</a>'
+    )
+
+    html_parts.append(
+        """
+    </div>
+</section>
+"""
+    )
+
+    # -------------------------------------------------
+    # CONTENT SECTIONS
+    # -------------------------------------------------
+
+    for section in sections:
+
+        section_type = section.get(
+            "type",
+            "section"
+        )
+
+        heading = section.get(
+            "heading",
+            ""
+        )
+
+        content = section.get(
+            "content",
+            ""
+        )
+
+        if section_type == "hero":
+            continue
+
+        if section_type == "faq":
+            continue
+
+        if section_type == "cta":
+
+            html_parts.append(
+                '<section class="cta" id="contact">'
+            )
+
+            html_parts.append(
+                '<div class="container">'
+            )
+
+            if heading:
+
+                html_parts.append(
+                    f"<h2>{escape(heading)}</h2>"
+                )
+
+            if content:
+
+                html_parts.append(
+                    f'<div class="cta-content">'
+                    f'{escape(content)}'
+                    f'</div>'
+                )
+
+            html_parts.append(
+                '<a class="cta-button" href="#contact">'
+                'Contact Us'
+                '</a>'
+            )
+
+            html_parts.append(
+                "</div>"
+            )
+
+            html_parts.append(
+                "</section>"
+            )
+
+            continue
+
+        section_id = section_type or "section"
+
+        if section_type == "about":
+            section_id = "about"
+
+        elif section_type == "services":
+            section_id = "services"
+
+        elif section_type == "local_information":
+            section_id = "location"
+            
+        elif section_type == "why_choose_us":   
+            section_id = "why-choose-us"  
+            
+        elif section_type == "cta":
+            section_id = "contact"
+
+        html_parts.append(
+            f'<section class="section" '
+            f'id="{section_id}">'
+        )
+
+        html_parts.append(
+            '<div class="container">'
+        )
+
+        if heading:
+
+            html_parts.append(
+                f"<h2>{escape(heading)}</h2>"
+            )
+
+        if content:
+
+            html_parts.append(
+                f'<div class="section-content">'
+                f'{escape(content)}'
+                f'</div>'
+            )
+
+        # Service cards
+        if section_type == "services":
+
+            service_names = []
+
+            local_business = schema_markup.get(
+                "local_business",
+                {}
+            )
+
+            offers = local_business.get(
+                "makesOffer",
+                []
+            )
+
+            for offer in offers:
+
+                item = offer.get(
+                    "itemOffered",
+                    {}
+                )
+
+                service_name = item.get(
+                    "name"
+                )
+
+                if service_name:
+                    service_names.append(
+                        service_name
+                    )
+
+            if service_names:
+
+                html_parts.append(
+                    '<div class="services-grid">'
+                )
+
+                for service_name in service_names:
+
+                    html_parts.append(
+                        '<div class="service-card">'
+                    )
+
+                    html_parts.append(
+                        f"<h3>{escape(service_name)}</h3>"
+                    )
+
+                    html_parts.append(
+                        f"<p>{escape(service_name)} "
+                        f"services in "
+                        f"{escape(location_short)}.</p>"
+                    )
+
+                    html_parts.append(
+                        "</div>"
+                    )
+
+                html_parts.append(
+                    "</div>"
+                )
+
+        html_parts.append(
+            "</div>"
+        )
+
+        html_parts.append(
+            "</section>"
+        )
+
+    # -------------------------------------------------
+    # FAQ
+    # -------------------------------------------------
+
+    if faqs:
+
+        html_parts.append(
+            '<section class="faq-section" id="faq">'
+        )
+
+        html_parts.append(
+            '<div class="container">'
+        )
+
+        html_parts.append(
+            "<h2>Frequently Asked Questions</h2>"
+        )
+
+        for faq in faqs:
+
+            question = faq.get(
+                "question",
+                ""
+            )
+
+            answer = faq.get(
+                "answer",
+                ""
+            )
+
+            if not question or not answer:
+                continue
+
+            html_parts.append(
+                '<div class="faq-item">'
+            )
+
+            html_parts.append(
+                f"<h3>{escape(question)}</h3>"
+            )
+
+            html_parts.append(
+                f"<p>{escape(answer)}</p>"
+            )
+
+            html_parts.append(
+                "</div>"
+            )
+
+        html_parts.append(
+            "</div>"
+        )
+
+        html_parts.append(
+            "</section>"
+        )
+
+    # -------------------------------------------------
+    # FOOTER
+    # -------------------------------------------------
+
+    html_parts.append(
+        """
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-content">
+"""
+    )
+
+    html_parts.append(
+        f"{escape(business_name)}"
+        f" — {escape(location)}"
+    )
+
+    html_parts.append(
+        """
+        </div>
+    </div>
+</footer>
+"""
+    )
+
+    html_parts.append(
+        "</main>"
+    )
+
+    html_parts.append(
+        "</body>"
+    )
+
+    html_parts.append(
+        "</html>"
+    )
+
+    return "\n".join(
+        html_parts
+    )
